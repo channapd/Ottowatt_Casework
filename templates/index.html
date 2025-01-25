@@ -89,8 +89,8 @@
 
         .response-section {
             margin-top: 20px;
-            max-height: 400px;  /* Set a max height */
-            overflow-y: auto;   /* Enable vertical scrolling */
+            max-height: 400px;
+            overflow-y: auto;
             padding: 10px;
             background-color: #f4f4f4;
             border-radius: 5px;
@@ -98,8 +98,19 @@
 
         pre {
             font-size: 1.1em;
-            white-space: pre-wrap;  /* Preserve spacing and newlines */
-            word-wrap: break-word;  /* Break long words */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Style for messages - red for both error and success */
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 1em;
+            background-color: #f8d7da; /* Red background for all messages */
+            color: #721c24; /* Red text color */
+            border: 1px solid #f5c6cb; /* Red border */
         }
     </style>
 </head>
@@ -107,6 +118,13 @@
 
 <div class="container">
     <h1>Upload your PDF here</h1>
+
+    <!-- Display the message (if any) -->
+    {% if message %}
+        <div class="message">
+            {{ message }}
+        </div>
+    {% endif %}
 
     <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
         <label for="apikey">Enter your Google Gemini API Key:</label>
@@ -132,12 +150,10 @@
 </div>
 
 <script>
-    // Show loading spinner when form is submitted
     const form = document.getElementById('uploadForm');
     const loadingSpinner = document.getElementById('loading');
 
     form.addEventListener('submit', function(event) {
-        // Show the loading spinner
         loadingSpinner.style.display = 'flex';
     });
 </script>
