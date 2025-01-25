@@ -1,13 +1,29 @@
 import os
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, flash
 import google.generativeai as genai
+from PyPDF2 import PdfReader
 
-# Initialize Flask app
+
 app = Flask(__name__)
 
+app.config['SECRET_KEY'] = os.urandom(24)
+
+MAX_PAGES = 2
 UPLOAD_FOLDER = '/tmp/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+
+def check_pdf_pages(pdf_path):
+    try:
+        with open(pdf_path, 'rb') as f:
+            reader = PdfReader(f)
+            if len(reader.pages) > MAX_PAGES:
+                return False  
+    except Exception as e:
+        return False  
+    return True  
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -21,8 +37,16 @@ def index():
 
         if api_key and pdf_file:
 
+            if not pdf_file.filename.endswith('.pdf'):
+                flash('Only PDF files are allowed.', 'error')
+                return redirect(request.url)
+
             pdf_path = os.path.join(UPLOAD_FOLDER, pdf_file.filename)
             pdf_file.save(pdf_path)
+
+            if not check_pdf_pages(pdf_path):
+                flash(f"The uploaded PDF file exceeds {MAX_PAGES} pages.", 'error')
+                return redirect(request.url)
             
             llm_response = process_with_llm(pdf_path, api_key)
 
@@ -68,7 +92,7 @@ def process_with_llm(file_path, api_key):
 
         response = model.generate_content([sample_file, PROMPT_TEMPLATE])
 
-        print(response.text)
+        #print(response.text)
 
         return response.text
         
