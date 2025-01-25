@@ -6,9 +6,4 @@
   "routes": [
     {"src": "/(.*)", "dest": "app.py"}
   ]
-  "functions": {
-    "app/api/mySlowFunction/route.ts": {
-      "maxDuration": 60
-    }
-  }
 }
