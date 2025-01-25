@@ -1,15 +1,14 @@
 import os
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template, redirect, url_for
 import google.generativeai as genai
 from PyPDF2 import PdfReader
-
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.urandom(24)
 
 MAX_PAGES = 2
-UPLOAD_FOLDER = '/tmp/uploads'
+UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
@@ -28,31 +27,28 @@ def check_pdf_pages(pdf_path):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     llm_response = ''
+    message = ''  # This will hold the message to be displayed to the user
     
     if request.method == 'POST':
         
         api_key = request.form.get('apikey')
-        
         pdf_file = request.files.get('pdfFile')
 
         if api_key and pdf_file:
-
             if not pdf_file.filename.endswith('.pdf'):
-                flash('Only PDF files are allowed.', 'error')
-                return redirect(request.url)
+                message = 'Only PDF files are allowed.'
+                return render_template('index.html', llm_response=llm_response, message=message)
 
             pdf_path = os.path.join(UPLOAD_FOLDER, pdf_file.filename)
             pdf_file.save(pdf_path)
 
             if not check_pdf_pages(pdf_path):
-                flash(f"The uploaded PDF file exceeds {MAX_PAGES} pages.", 'error')
-                return redirect(request.url)
+                message = f"The uploaded PDF file exceeds {MAX_PAGES} pages."
+                return render_template('index.html', llm_response=llm_response, message=message)
             
             llm_response = process_with_llm(pdf_path, api_key)
 
-            #return redirect(url_for('index', llm_response=llm_response))
-
-    return render_template('index.html', llm_response=llm_response)
+    return render_template('index.html', llm_response=llm_response, message=message)
 
 
 def process_with_llm(file_path, api_key):
@@ -91,8 +87,6 @@ def process_with_llm(file_path, api_key):
 
 
         response = model.generate_content([sample_file, PROMPT_TEMPLATE])
-
-        #print(response.text)
 
         return response.text
         
